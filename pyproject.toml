@@ -1,7 +1,7 @@
 [project]
 name = "loop-schemas"
-version = "0.1.0"
-description = "Canonical schemas and a dependency-free validator for Evidence-Gated Engineering Loop contracts, evidence, verdicts, and builder results."
+version = "0.1.1"
+description = "Canonical schemas with standard-library JSON validation and optional PyYAML support for Evidence-Gated Engineering Loops."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 license = { text = "MIT" }
