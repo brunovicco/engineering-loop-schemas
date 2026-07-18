@@ -7,6 +7,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- `LICENSE` (MIT), matching the license already declared in `pyproject.toml`'s `[project]`
+  table -- present in both sibling harnesses but missing here since this repo's initial
+  commit.
+
 ### Fixed
 
 - `models.py`: suppress ruff's `UP037` on the quoted self-referencing `from_dict` return
