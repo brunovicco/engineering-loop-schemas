@@ -1,6 +1,6 @@
 [project]
 name = "loop-schemas"
-version = "0.1.1"
+version = "0.1.2"
 description = "Canonical schemas with standard-library JSON validation and optional PyYAML support for Evidence-Gated Engineering Loops."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
