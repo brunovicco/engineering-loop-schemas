@@ -1,0 +1,76 @@
+# Example contract for the Phase 0-1, report-only harness self-evaluation
+# workflow described in docs/LOOPS.md in both the Codex and Claude Code
+# Python engineering harnesses. This contract is illustrative: while loop
+# autonomy is "report", nothing consumes it to actually run a loop -- it
+# exists so validate_contract.py has a real, representative fixture, and
+# so the eventual loop_runner (out of scope for Phase 0-1) has a contract
+# to point at on day one.
+version: "1.0.0"
+id: harness-self-improvement
+objective: >
+  Render the service, library, and workspace profiles (plus representative
+  governance-profile combinations), run each generated project's quality
+  gate, and report gate results, durations, and documentation-consistency
+  divergences as a workflow artifact. Never modify repository code.
+
+trigger:
+  type: schedule
+  schedule: "0 6 * * 1"  # weekly, Monday 06:00
+
+selection:
+  strategy: render-all-profile-combinations
+  max_items: 12
+
+baseline:
+  commands:
+    - "uv lock --check"
+    - "uv sync --frozen --all-groups"
+    - "uv run python scripts/quality_gate.py"
+
+acceptance:
+  hard_gates:
+    - lock
+    - lint
+    - format
+    - typing
+    - tests
+    - security
+    - dependencies
+    - architecture
+    - mcp
+    - governance
+
+budgets:
+  max_tokens: 400000
+  max_cost_usd: 10.0
+  max_wall_clock_minutes: 30
+  max_commands: 200
+
+scope:
+  allowlist:
+    - "build/governance-evidence/**"
+  denylist:
+    - ".loop/**"
+    - "scripts/loop_*"
+    - "governance/catalog/**"
+    - "governance/overlays/**"
+
+actions:
+  allowed:
+    - read
+    - render_profile
+    - run_quality_gate
+    - write_report_artifact
+  denied:
+    - edit
+    - write
+    - apply_patch
+    - commit
+    - push
+    - merge
+    - create_release
+
+human_review:
+  required: true
+  reviewers:
+    - "@brunovicco"

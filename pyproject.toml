@@ -1,0 +1,58 @@
+[project]
+name = "loop-schemas"
+version = "0.1.0"
+description = "Canonical schemas and a dependency-free validator for Evidence-Gated Engineering Loop contracts, evidence, verdicts, and builder results."
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+license = { text = "MIT" }
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "ruff==0.15.21",
+    "pyright==1.1.407",
+    "pytest==9.1.1",
+    "pytest-cov==6.0.0",
+    "jsonschema==4.25.0",
+    "pyyaml==6.0.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/loop_schemas"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S", "C4", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+
+# pytest fixtures (capsys, tmp_path, ...) and jsonschema's validate() are not
+# fully typed; relax the "unknown type" family of strict checks for tests
+# only. src/ stays under full strict mode with zero suppressions.
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+reportUnknownParameterType = false
+reportMissingParameterType = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+
+[tool.pytest.ini_options]
+addopts = "--cov=loop_schemas --cov-report=term-missing --cov-fail-under=80"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src/loop_schemas"]

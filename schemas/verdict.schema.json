@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/brunovicco/engineering-loop-schemas/schemas/verdict.schema.json",
+  "title": "Evidence-Gated Engineering Loop Verdict",
+  "description": "The single, mechanically-derived outcome of grading evidence against a contract's hard gates. A verdict always references the evidence it was derived from (by hash) and the candidate it concerns. Nothing in the loop is permitted to override PASS/NEEDS_WORK/ESCALATE except a human reviewer acting outside of automation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "run_id",
+    "contract_id",
+    "candidate_sha",
+    "evidence_sha256",
+    "status",
+    "justification",
+    "final_state",
+    "decided_at"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contract_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidate_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "evidence_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the canonical (sorted-keys, UTF-8) JSON serialization of the evidence document this verdict was derived from."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "NEEDS_WORK", "ESCALATE"]
+    },
+    "justification": {
+      "type": "object",
+      "description": "Structured explanation of the status, keyed by hard-gate name plus an optional summary.",
+      "additionalProperties": false,
+      "required": ["gate_results"],
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "gate_results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["gate", "passed"],
+            "properties": {
+              "gate": { "type": "string", "minLength": 1 },
+              "passed": { "type": "boolean" },
+              "detail": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "final_state": {
+      "type": "string",
+      "description": "One of the documented loop-run final states (see README.md).",
+      "enum": [
+        "SUCCEEDED",
+        "NO_OP",
+        "NO_PROGRESS",
+        "VERIFY_FAILED",
+        "POLICY_BLOCKED",
+        "BUDGET_EXCEEDED",
+        "ESCALATED",
+        "INFRA_FAILED"
+      ]
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
