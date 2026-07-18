@@ -85,7 +85,7 @@ library call; an empty list means the contract is valid. Beyond JSON-Schema
 structural validation, it additionally checks that `scope.allowlist` and
 `scope.denylist` do not literally overlap, that every glob is syntactically
 well-formed, that every budget is strictly positive, and that every
-`acceptance.hard_gates` entry is one of the named checks a harness's own
+`acceptance.hard_gates` entry is one of the contract-addressable named checks a harness's own
 `quality_gate.py` can actually run (`lock`, `lint`, `format`, `typing`,
 `tests`, `security`, `dependencies`, `architecture`, `mcp`, `governance`).
 
@@ -95,15 +95,19 @@ Because `template/scripts/quality_gate.py` in both harnesses must not gain a
 new third-party dependency, `src/loop_schemas/models.py` and
 `src/loop_schemas/validate_contract.py` are stdlib-only by design (YAML
 input degrades gracefully with a clear error if PyYAML is not installed;
-JSON input always works with no extra dependency). Until this repository has
-a published tag, harnesses vendor these two files verbatim with a header
-comment recording the source commit and version, for example:
+JSON input always works with no extra dependency).
 
-```python
-# Vendored from brunovicco/engineering-loop-schemas @ <commit-sha>
-# (no published tag yet as of this vendoring). Do not edit by hand;
-# re-vendor from the source repository instead.
-```
+The harnesses consume a deterministic bundle rendered by
+`scripts/render_vendor_bundle.py` from the published `v0.1.2` source. The renderer records the
+full source commit, version, repository, file sizes, SHA-256 hashes, and declared adaptations in
+`manifest.json`. The current consumers are pinned to
+`0459d61b7b1d4e7b46709e6d3895770553e6fab0`.
+
+The bundle is not a byte-for-byte copy: the renderer changes the package import in
+`validate_contract.py` from `loop_schemas` to `_vendor_loop_schemas`. That single adaptation is
+declared in the manifest and is covered by determinism, integrity, and tampering tests. Do not edit
+a rendered bundle by hand. Fix the source repository, publish a new version and tag, then render a
+new bundle for each consumer.
 
 `models.py` also needs the consuming project's own `pyproject.toml` to carry a matching
 `[tool.ruff.lint.per-file-ignores]` entry suppressing `UP037` for wherever the file lands
