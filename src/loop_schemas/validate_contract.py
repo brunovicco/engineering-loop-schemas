@@ -134,7 +134,7 @@ def load_document(path: Path) -> dict[str, Any]:
     text = path.read_text(encoding="utf-8")
     if path.suffix in {".yaml", ".yml"}:
         try:
-            import yaml  # noqa: PLC0415 -- optional, YAML-only dependency
+            import yaml  # local import: optional, YAML-only dependency
         except ImportError as exc:
             raise ContractValidationError(
                 f"{path}: reading YAML contracts requires PyYAML "

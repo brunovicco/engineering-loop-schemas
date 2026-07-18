@@ -23,6 +23,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   lints `models.py` against every supported target-version (`py312`, `py313`, `py314`).
   Consuming projects need the equivalent per-file-ignore for wherever they vendor this file
   (see README.md's vendoring section).
+- `validate_contract.py`: dropped a stray `# noqa: PLC0415` on the lazy `import yaml`. No
+  known consumer (this repo or either sibling harness) selects ruff's `PL` rule family, so
+  the directive suppressed nothing locally but became a second `RUF100` unused-directive
+  failure once vendored into a harness project that enables `RUF` (both harnesses' `library`
+  and `workspace` profiles do). Replaced with a plain comment; the import stays function-local
+  on purpose (YAML is an optional dependency).
 
 ## [0.1.0] - 2026-07-18
 
