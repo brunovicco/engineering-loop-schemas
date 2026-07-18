@@ -27,8 +27,8 @@ from typing import Any, cast
 
 from loop_schemas.models import Contract
 
-# The hard-gate names both the Codex and Claude Code Python engineering
-# harnesses' quality_gate.py scripts already report as named checks
+# The hard-gate names shared by both Python engineering harnesses'
+# quality_gate.py scripts are already reported as named checks
 # (see Check(...) entries in template/scripts/quality_gate.py in both
 # harnesses). A hard gate declared in a contract must resolve to a check
 # a harness's own quality gate can actually run.
