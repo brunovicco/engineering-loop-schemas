@@ -33,6 +33,11 @@ select = ["E", "F", "I", "UP", "B", "S", "C4", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
+# The self-referencing `from_dict` return annotations in models.py are
+# quoted on purpose (see the module-level comment there); only suppress
+# UP037 there, not project-wide, so a real removable-quote elsewhere would
+# still be caught.
+"src/loop_schemas/models.py" = ["UP037"]
 
 [tool.pyright]
 include = ["src", "tests"]

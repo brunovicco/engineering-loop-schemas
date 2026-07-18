@@ -7,6 +7,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- `models.py`: suppress ruff's `UP037` on the quoted self-referencing `from_dict` return
+  annotations (e.g. `-> "Budgets"`) via a targeted `[tool.ruff.lint.per-file-ignores]`
+  entry in `pyproject.toml`, not an inline `# noqa: UP037`. The quotes are load-bearing on
+  Python 3.12/3.13 -- this module deliberately avoids `from __future__ import annotations`
+  so it stays safe to vendor into codebases that ban that import -- and `UP037` incorrectly
+  flags them as unnecessary whenever a caller's ruff `target-version` is `py314` (where PEP
+  649 lazy annotations are the default). Caught when this file was vendored into a harness
+  project rendered for Python 3.14 and failed CI lint. An inline `# noqa: UP037` was tried
+  first but caused a *different* failure (`RUF100`, unused-directive) on 3.12/3.13, where
+  `UP037` never fires in the first place, so the noqa has nothing to suppress there; the
+  per-file-ignore avoids that because it isn't line-scoped. Added a regression test that
+  lints `models.py` against every supported target-version (`py312`, `py313`, `py314`).
+  Consuming projects need the equivalent per-file-ignore for wherever they vendor this file
+  (see README.md's vendoring section).
+
 ## [0.1.0] - 2026-07-18
 
 Initial release: the canonical Evidence-Gated Engineering Loop contract, established as part of

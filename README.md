@@ -105,6 +105,12 @@ comment recording the source commit and version, for example:
 # re-vendor from the source repository instead.
 ```
 
+`models.py` also needs the consuming project's own `pyproject.toml` to carry a matching
+`[tool.ruff.lint.per-file-ignores]` entry suppressing `UP037` for wherever the file lands
+(e.g. `"scripts/_vendor_loop_schemas/models.py" = ["UP037"]`). Do not add an inline
+`# noqa: UP037` instead -- it triggers a `RUF100` unused-directive error on Python
+3.12/3.13, where `UP037` never fires (see this repo's CHANGELOG `[Unreleased]` entry).
+
 ## Development
 
 ```bash
