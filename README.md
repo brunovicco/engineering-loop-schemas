@@ -73,6 +73,14 @@ Every completed run resolves to exactly one final state, recorded on its
 | `ESCALATED` | The run could not resolve PASS/FAIL and needs a human decision. |
 | `INFRA_FAILED` | The run failed for reasons unrelated to the candidate (tooling, network, environment). |
 
+`NO_PROGRESS` is specifically a trusted finding that a candidate does not
+improve on the baseline. Repeated equivalent diffs or failure signatures are
+internal stall signals, not final states by themselves. Their final
+classification follows the typed cause: for example, candidate verification,
+policy, budget, and infrastructure failures remain `VERIFY_FAILED`,
+`POLICY_BLOCKED`, `BUDGET_EXCEEDED`, and `INFRA_FAILED`, respectively. See
+[`ADR 0001`](docs/adr/0001-no-progress-and-stall-signals.md).
+
 ## Validating a contract
 
 ```bash
