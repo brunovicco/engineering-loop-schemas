@@ -9,6 +9,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Community documentation ring matching both sibling harnesses: `CONTRIBUTING.md` (including the
+  Phase 0-1 feature-freeze scope and stdlib-only design constraints), `SECURITY.md` (private
+  vulnerability reporting; a validator flaw propagates to every generated project),
+  `SUPPORT.md`, and `CODE_OF_CONDUCT.md`.
+- `README.pt-BR.md`: Portuguese translation of the README, kept in sync per the language policy
+  now documented in `CONTRIBUTING.md`.
 - `LICENSE` (MIT), matching the license already declared in `pyproject.toml`'s `[project]`
   table -- present in both sibling harnesses but missing here since this repo's initial
   commit.

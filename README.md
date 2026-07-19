@@ -1,5 +1,7 @@
 # engineering-loop-schemas
 
+*[Português](README.pt-BR.md)*
+
 Canonical, shared schemas with dependency-free JSON validation and optional
 PyYAML support for Evidence-Gated Engineering Loops -- the report-only self-improvement workflow shared by the
 [Codex](https://github.com/brunovicco/codex-python-engineering-harness) and
