@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-07-20
+
 ### Added
 
 - Community documentation ring matching both sibling harnesses: `CONTRIBUTING.md` (including the
@@ -42,7 +44,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   and `workspace` profiles do). Replaced with a plain comment; the import stays function-local
   on purpose (YAML is an optional dependency).
 
-## [0.1.0] - 2026-07-18
+### Changed
+
+- Changelog backfill: added the previously missing `0.1.1` and `0.1.2` entries below and corrected
+  the comparison links. The `0.1.0` section describes the initial commit, which was never tagged;
+  `v0.1.1` is the first tag.
+
+## [0.1.2] - 2026-07-18
+
+### Fixed
+
+- Keep the vendored validator provider-neutral: the package-import adaptation for vendoring into
+  harness projects no longer assumes a specific provider layout. This is the bundle pinned by both
+  sibling harnesses (`0459d61`).
+
+## [0.1.1] - 2026-07-18
+
+### Added
+
+- CI (`schema-quality`) and deterministic vendor-integrity checking: `manifest.json` with source
+  provenance, file sizes, and SHA-256 hashes for the vendorable validator bundle. First tagged
+  release.
+
+## 0.1.0 - 2026-07-18
 
 Initial release: the canonical Evidence-Gated Engineering Loop contract, established as part of
 the Codex/Claude Code Python engineering harness consolidation (Sprint 0, Phase 0-1, report-only).
@@ -61,5 +85,7 @@ the Codex/Claude Code Python engineering harness consolidation (Sprint 0, Phase 
   cross-validation against both the JSON Schema and `validate_contract.validate()`, and CLI
   behavior. Coverage enforced at >=80%.
 
-[Unreleased]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/brunovicco/engineering-loop-schemas/releases/tag/v0.1.0
+[Unreleased]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/brunovicco/engineering-loop-schemas/releases/tag/v0.1.1
