@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-21
+
 ### Changed
 
 - Strengthened evidence command integrity with typed termination, nullable exit codes for
@@ -16,8 +18,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Compatibility
 
-- This is a breaking evidence-schema change. The next release must be `v0.2.0`; consumers must
-  update their generated evidence and re-pin only after that release is published.
+- This is a breaking evidence-schema change. Evidence producers must populate typed termination,
+  separate stdout and stderr hashes, and the immutable trusted gate specification hash. Consumers
+  must re-render their vendor bundle from this release instead of editing vendored copies.
 
 ## [0.1.3] - 2026-07-20
 
@@ -97,7 +100,8 @@ the Codex/Claude Code Python engineering harness consolidation (Sprint 0, Phase 
   cross-validation against both the JSON Schema and `validate_contract.validate()`, and CLI
   behavior. Coverage enforced at >=80%.
 
-[Unreleased]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/brunovicco/engineering-loop-schemas/releases/tag/v0.1.1
