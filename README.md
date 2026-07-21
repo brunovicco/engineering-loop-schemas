@@ -25,8 +25,10 @@ copies. See `docs/LOOPS.md` in each harness for how it is consumed.
   reduced to a command with an exit code, it is not a hard gate.
 - **Evidence is bound to exact commits.** Every `evidence` document carries
   `baseline_sha` and `candidate_sha`, plus a hashed environment
-  (`uv_lock_sha256`) and hashed command output, so a verdict can always be
-  traced back to exactly what ran against exactly what code.
+  (`uv_lock_sha256`). Each command result records typed termination, hashes
+  of both output streams, and the immutable trusted gate specification hash,
+  so a verdict can always be traced back to exactly what ran against exactly
+  what code and policy.
 - **Hooks are defense in depth, not orchestration.** Nothing in this
   repository, or in the Phase 0 integration described in each harness's
   `docs/LOOPS.md`, runs a loop, promotes a candidate, or grants autonomy

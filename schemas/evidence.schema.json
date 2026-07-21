@@ -67,19 +67,57 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["command", "exit_code", "stdout_sha256", "duration_s"],
+        "required": [
+          "command",
+          "termination",
+          "exit_code",
+          "stdout_sha256",
+          "stderr_sha256",
+          "specification_sha256",
+          "duration_s"
+        ],
         "properties": {
           "command": { "type": "string", "minLength": 1 },
-          "exit_code": { "type": "integer" },
+          "termination": {
+            "type": "string",
+            "enum": ["EXITED", "TIMED_OUT", "CANCELLED", "OUTPUT_LIMIT"]
+          },
+          "exit_code": {
+            "type": ["integer", "null"],
+            "description": "Process exit code for EXITED; null for every other termination."
+          },
           "stdout_sha256": {
             "type": "string",
             "pattern": "^[0-9a-f]{64}$"
+          },
+          "stderr_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "specification_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the immutable trusted gate specification executed for this result."
           },
           "duration_s": {
             "type": "number",
             "minimum": 0
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "termination": { "const": "EXITED" } },
+              "required": ["termination"]
+            },
+            "then": {
+              "properties": { "exit_code": { "type": "integer" } }
+            },
+            "else": {
+              "properties": { "exit_code": { "type": "null" } }
+            }
+          }
+        ]
       }
     },
     "changed_files": {

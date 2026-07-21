@@ -7,6 +7,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- Strengthened evidence command integrity with typed termination, nullable exit codes for
+  non-`EXITED` outcomes, separate SHA-256 hashes for stdout and stderr, and the SHA-256 of the
+  immutable trusted gate specification. The schema rejects contradictory combinations such as
+  `TIMED_OUT` with an exit code or `EXITED` without one.
+
+### Compatibility
+
+- This is a breaking evidence-schema change. The next release must be `v0.2.0`; consumers must
+  update their generated evidence and re-pin only after that release is published.
+
 ## [0.1.3] - 2026-07-20
 
 ### Added

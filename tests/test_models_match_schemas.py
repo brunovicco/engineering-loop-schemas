@@ -108,6 +108,11 @@ def test_evidence_model_matches_schema() -> None:
     for model_type, path in mappings:
         assert_field_parity(model_type, schema, *path)
 
+    command_properties = properties_at(schema, "commands", "[]")
+    assert set(get_args(models.ExecutionTermination)) == set(
+        command_properties["termination"]["enum"]
+    )
+
     value = models.Evidence(
         version="1.0.0",
         run_id="run-001",
@@ -122,8 +127,11 @@ def test_evidence_model_matches_schema() -> None:
         commands=(
             models.CommandResult(
                 command="uv run pytest",
+                termination="EXITED",
                 exit_code=0,
                 stdout_sha256="d" * 64,
+                stderr_sha256="e" * 64,
+                specification_sha256="f" * 64,
                 duration_s=1.25,
             ),
         ),
