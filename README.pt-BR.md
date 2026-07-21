@@ -26,8 +26,10 @@ hardening do Sprint 0 / Fase 0-1, para que os dois harnesses irmãos dependam de
   ser reduzido a um comando com código de saída, ele não é um hard gate.
 - **A evidência é vinculada a commits exatos.** Todo documento `evidence` carrega
   `baseline_sha` e `candidate_sha`, além de um ambiente com hash
-  (`uv_lock_sha256`) e saída de comandos com hash, de modo que um veredito sempre
-  possa ser rastreado até exatamente o que rodou contra exatamente qual código.
+  (`uv_lock_sha256`). Cada resultado de comando registra terminação tipada,
+  hashes de ambos os fluxos de saída e o hash da especificação imutável do gate
+  confiável, de modo que um veredito sempre possa ser rastreado até exatamente o
+  que rodou contra exatamente qual código e política.
 - **Hooks são defesa em profundidade, não orquestração.** Nada neste repositório,
   nem na integração da Fase 0 descrita no `docs/LOOPS.md` de cada harness, executa
   um loop, promove um candidato ou concede autonomia acima de `report`.
@@ -142,3 +144,4 @@ uv run pyright
 ```
 
 A cobertura é exigida em >=80% (`--cov-fail-under=80` no `pyproject.toml`).
+

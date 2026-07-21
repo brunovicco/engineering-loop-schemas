@@ -40,6 +40,7 @@ FinalState = Literal[
     "INFRA_FAILED",
 ]
 Confidence = Literal["low", "medium", "high"]
+ExecutionTermination = Literal["EXITED", "TIMED_OUT", "CANCELLED", "OUTPUT_LIMIT"]
 
 FINAL_STATES: tuple[FinalState, ...] = (
     "SUCCEEDED",
@@ -239,11 +240,14 @@ class Environment:
 
 @dataclass(frozen=True, slots=True)
 class CommandResult:
-    """One executed command's hashed, timed result."""
+    """One trusted gate command's typed, hashed, and timed result."""
 
     command: str
-    exit_code: int
+    termination: ExecutionTermination
+    exit_code: int | None
     stdout_sha256: str
+    stderr_sha256: str
+    specification_sha256: str
     duration_s: float
 
 
