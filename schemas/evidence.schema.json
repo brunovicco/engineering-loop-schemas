@@ -1,16 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/brunovicco/engineering-loop-schemas/schemas/evidence.schema.json",
+  "$id": "https://raw.githubusercontent.com/brunovicco/engineering-loop-schemas/main/schemas/evidence.schema.json",
   "title": "Evidence-Gated Engineering Loop Evidence",
-  "description": "Mechanical, reproducible record of exactly what was run against exactly which commits, with hashed outputs. Evidence is what hard gates are graded from; it is produced by running acceptance.hard_gates' commands, never asserted by a builder.",
+  "description": "Mechanical, reproducible record of exactly what ran against immutable repository, contract, policy, environment, and gate inputs. Evidence is produced by a trusted executor, never asserted by a builder.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "version",
     "run_id",
     "contract_id",
-    "baseline_sha",
-    "candidate_sha",
+    "repository",
+    "oid_algorithm",
+    "baseline_oid",
+    "candidate_oid",
+    "candidate_tree_sha256",
+    "contract_sha256",
+    "policy_sha256",
     "environment",
     "commands",
     "changed_files",
@@ -21,43 +26,103 @@
   "properties": {
     "version": {
       "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+      "description": "Evidence wire-format version.",
+      "const": "2.0.0"
     },
     "run_id": {
       "type": "string",
-      "description": "Unique identifier for this loop run (e.g. a UUID4 or ULID).",
+      "description": "Unique identifier for this loop run, such as a UUID or ULID.",
       "minLength": 1
     },
     "contract_id": {
       "type": "string",
       "minLength": 1
     },
-    "baseline_sha": {
+    "repository": {
       "type": "string",
-      "pattern": "^[0-9a-f]{7,40}$"
+      "description": "Canonical repository identity, independent of the local checkout path.",
+      "minLength": 1
     },
-    "candidate_sha": {
+    "oid_algorithm": {
       "type": "string",
-      "pattern": "^[0-9a-f]{7,40}$"
+      "enum": ["sha1", "sha256"]
+    },
+    "baseline_oid": {
+      "type": "string",
+      "description": "Complete Git object ID of the trusted baseline commit."
+    },
+    "candidate_oid": {
+      "type": "string",
+      "description": "Complete Git object ID of the candidate commit."
+    },
+    "candidate_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the deterministic candidate tree representation evaluated."
+    },
+    "contract_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the canonical contract bytes used for this run."
+    },
+    "policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the complete trusted policy input used for evaluation."
     },
     "environment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["python", "uv_lock_sha256", "tool_versions"],
+      "required": [
+        "python",
+        "operating_system",
+        "architecture",
+        "executor_image",
+        "working_directory",
+        "sandbox_profile",
+        "uv_lock_sha256",
+        "tool_versions"
+      ],
       "properties": {
         "python": {
           "type": "string",
-          "description": "Python version used to run the gates, e.g. '3.13.13'."
+          "description": "Python version used to run the gates, for example '3.13.13'.",
+          "minLength": 1
+        },
+        "operating_system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "executor_image": {
+          "type": "string",
+          "description": "Immutable executor image identity or digest; use 'host' only for an explicitly host-bound executor.",
+          "minLength": 1
+        },
+        "working_directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sandbox_profile": {
+          "type": "string",
+          "description": "Stable identifier or digest for the applied sandbox policy.",
+          "minLength": 1
         },
         "uv_lock_sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$",
-          "description": "SHA-256 of uv.lock at candidate_sha, binding evidence to an exact dependency set."
+          "description": "SHA-256 of uv.lock at candidate_oid, binding evidence to an exact dependency set."
         },
         "tool_versions": {
           "type": "object",
-          "description": "Mapping of tool name to resolved version, e.g. {'ruff': '0.15.21', 'mypy': '2.3.0'}.",
-          "additionalProperties": { "type": "string" }
+          "description": "Mapping of tool name to resolved version.",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -68,7 +133,7 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "command",
+          "argv",
           "termination",
           "exit_code",
           "stdout_sha256",
@@ -77,14 +142,22 @@
           "duration_s"
         ],
         "properties": {
-          "command": { "type": "string", "minLength": 1 },
+          "argv": {
+            "type": "array",
+            "description": "Shell-free argument vector executed by the trusted runner.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
           "termination": {
             "type": "string",
             "enum": ["EXITED", "TIMED_OUT", "CANCELLED", "OUTPUT_LIMIT"]
           },
           "exit_code": {
             "type": ["integer", "null"],
-            "description": "Process exit code for EXITED; null for every other termination."
+            "description": "Process exit code for EXITED; null for every forced termination."
           },
           "stdout_sha256": {
             "type": "string",
@@ -107,14 +180,26 @@
         "allOf": [
           {
             "if": {
-              "properties": { "termination": { "const": "EXITED" } },
+              "properties": {
+                "termination": {
+                  "const": "EXITED"
+                }
+              },
               "required": ["termination"]
             },
             "then": {
-              "properties": { "exit_code": { "type": "integer" } }
+              "properties": {
+                "exit_code": {
+                  "type": "integer"
+                }
+              }
             },
             "else": {
-              "properties": { "exit_code": { "type": "null" } }
+              "properties": {
+                "exit_code": {
+                  "type": "null"
+                }
+              }
             }
           }
         ]
@@ -122,22 +207,38 @@
     },
     "changed_files": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
     },
     "usage": {
       "type": "object",
       "additionalProperties": false,
       "required": ["provider", "model", "tokens"],
       "properties": {
-        "provider": { "type": "string", "minLength": 1 },
-        "model": { "type": "string", "minLength": 1 },
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
         "tokens": {
           "type": "object",
           "additionalProperties": false,
           "required": ["input", "output"],
           "properties": {
-            "input": { "type": "integer", "minimum": 0 },
-            "output": { "type": "integer", "minimum": 0 }
+            "input": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "estimated_cost_usd": {
@@ -154,5 +255,47 @@
       "type": "string",
       "format": "date-time"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "oid_algorithm": {
+            "const": "sha1"
+          }
+        },
+        "required": ["oid_algorithm"]
+      },
+      "then": {
+        "properties": {
+          "baseline_oid": {
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "candidate_oid": {
+            "pattern": "^[0-9a-f]{40}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "oid_algorithm": {
+            "const": "sha256"
+          }
+        },
+        "required": ["oid_algorithm"]
+      },
+      "then": {
+        "properties": {
+          "baseline_oid": {
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "candidate_oid": {
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  ]
 }

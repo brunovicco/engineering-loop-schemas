@@ -24,6 +24,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/loop_schemas"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"schemas" = "loop_schemas/schemas"
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100
@@ -56,8 +59,8 @@ reportUnknownVariableType = false
 reportUnknownArgumentType = false
 
 [tool.pytest.ini_options]
-addopts = "--cov=loop_schemas --cov-report=term-missing --cov-fail-under=80"
+addopts = "--cov=loop_schemas --cov=scripts --cov-report=term-missing --cov-fail-under=90"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-source = ["src/loop_schemas"]
+source = ["src/loop_schemas", "scripts"]

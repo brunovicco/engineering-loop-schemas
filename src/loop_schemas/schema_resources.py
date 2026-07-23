@@ -1,0 +1,43 @@
+"""Read the canonical JSON Schemas from source checkouts and installed wheels."""
+
+import json
+from importlib.resources import files
+from pathlib import Path
+from typing import Any, Literal, cast
+
+DocumentKind = Literal["contract", "evidence", "verdict", "builder-result"]
+
+SCHEMA_FILENAMES: dict[DocumentKind, str] = {
+    "contract": "contract.schema.json",
+    "evidence": "evidence.schema.json",
+    "verdict": "verdict.schema.json",
+    "builder-result": "builder-result.schema.json",
+}
+
+
+def schema_text(kind: DocumentKind) -> str:
+    """Return one canonical schema as UTF-8 text.
+
+    Wheels carry the schemas below ``loop_schemas/schemas``. Editable source
+    checkouts retain the repository-level ``schemas`` directory, so the
+    fallback keeps local development and vendored bundles dependency-free.
+    """
+    filename = SCHEMA_FILENAMES[kind]
+    package_name = __package__ or "loop_schemas"
+    packaged = files(package_name).joinpath("schemas", filename)
+    if packaged.is_file():
+        return packaged.read_text(encoding="utf-8")
+
+    source_schema = Path(__file__).resolve().parents[2] / "schemas" / filename
+    if source_schema.is_file():
+        return source_schema.read_text(encoding="utf-8")
+
+    raise FileNotFoundError(f"canonical schema is not packaged: {filename}")
+
+
+def load_schema(kind: DocumentKind) -> dict[str, Any]:
+    """Return one canonical schema as a decoded JSON object."""
+    document = json.loads(schema_text(kind))
+    if not isinstance(document, dict):
+        raise ValueError(f"{SCHEMA_FILENAMES[kind]} must contain a JSON object")
+    return cast(dict[str, Any], document)

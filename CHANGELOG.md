@@ -7,6 +7,45 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Public installed-schema API (`load_schema()` and `schema_text()`), with all four canonical JSON
+  Schemas included in the wheel and deterministic vendor bundle.
+- Standard-library, fail-closed structural evaluator for every assertion keyword used by the
+  canonical schemas.
+- Cross-document verdict validation for contract identity, duplicate gates, missing gates, and
+  undeclared gates.
+- Complete trusted evidence and verdict examples plus a breaking-change migration guide.
+- Tag-gated release-evidence workflow with SPDX JSON SBOM, SHA-256 checksums, SLSA build
+  provenance, SBOM attestations, and full-commit-pinned actions. It preserves evidence without
+  publishing automatically.
+- Adversarial differential tests against `jsonschema`, wheel-content tests, verdict-consistency
+  tests, and source-provenance tests. Coverage now includes the renderer and is enforced at 90%.
+
+### Changed
+
+- Document versions now identify wire formats with schema `const` values. Contract and
+  builder-result remain `1.0.0`; evidence and verdict advance to `2.0.0`.
+- Evidence now binds repository identity, the Git object-ID algorithm, complete baseline and
+  candidate OIDs, candidate-tree/contract/policy hashes, executor context, and shell-free argv.
+- Verdict now binds the contract hash and complete candidate OID and enforces valid
+  `status`/`final_state` combinations. `PASS` cannot contain a failed gate.
+- The vendor manifest advances to `2.0.0`, covers Python sources and schemas, and records every
+  package-import adaptation.
+- Bundle rendering now verifies package version, Git `HEAD`, origin repository, and a clean
+  working tree before writing. The complete output is staged before target replacement.
+
+### Fixed
+
+- `validate()` now enforces the canonical contract JSON Schema instead of relying on dataclass
+  construction, closing acceptance gaps for unknown properties, invalid enums, wrong types,
+  empty/duplicate collections, and unsupported document versions.
+- Unexpected types return structural errors instead of leaking `TypeError`.
+- Schema `$id` values now resolve to the raw canonical files on the default branch.
+- Corrected mojibake in ADR 0001, Markdown escapes in ADR 0002, and marked the released command
+  evidence decision as accepted.
+- Updated validation and vendoring documentation that still referred to `v0.1.2`.
+
 ## [0.2.0] - 2026-07-21
 
 ### Changed

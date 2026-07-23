@@ -1,10 +1,8 @@
 # Contributing
 
-> **Feature freeze.** The Phase 0-1 schema core is intentionally frozen while both consuming
-> harnesses (`codex-python-engineering-harness` and `claude-python-engineering-harness`) integrate
-> it. Bug fixes, security fixes, and documentation corrections are welcome; new schema fields,
-> new document types, or loop-runner functionality are out of scope until the next phase is
-> approved.
+> **Report-only boundary.** Schema and validation changes are welcome when they strengthen the
+> trust boundary, but breaking wire changes require a migration guide, a minor package release,
+> and coordinated consumer updates. Loop-runner functionality remains out of scope.
 
 This repository is the canonical source for the Evidence-Gated Engineering Loop schemas. Both
 sibling harnesses consume it as a pinned, hash-verified vendor bundle, so every change here can
@@ -17,13 +15,17 @@ privately as described in `SECURITY.md`.
 
 ```bash
 uv sync --all-groups
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
 uv run pytest
+uv build
 uv run python -m loop_schemas.validate_contract examples/harness-self-improvement.yaml
 ```
 
-The test suite enforces that `src/loop_schemas/models.py` stays in sync with `schemas/*.json`,
-that the example contract validates, that the rendered vendor bundle is deterministic, and that
-the source stays lint-compatible with Python 3.12-3.14.
+The test suite enforces model/schema parity, differential validator behavior, valid examples,
+wheel contents, verdict consistency, deterministic vendoring, source provenance, and lint
+compatibility across Python 3.12-3.14.
 
 ## Design constraints
 
@@ -34,6 +36,10 @@ the source stays lint-compatible with Python 3.12-3.14.
 - A builder-result document is never authoritative. Do not add fields that would let a builder
   certify its own outcome.
 - Hard gates must reduce to a command with an exit code; do not add prose-judged gates.
+- Every document schema uses `const` for its wire version. Do not couple a wire version to the
+  Python package version.
+- Adding a schema assertion keyword requires stdlib evaluator support and a differential test in
+  the same change. Unknown assertion keywords must remain fail-closed.
 
 ## Language policy
 
@@ -44,6 +50,12 @@ The conceptual loop documentation is translated in each consuming harness
 
 ## Releasing
 
-Schema changes require a new version tag (`vX.Y.Z`), a `CHANGELOG.md` entry, and a re-rendered
-vendor bundle (`scripts/render_vendor_bundle.py`) consumed by both harnesses in a follow-up
-change. Never edit a vendored copy in a harness directly.
+Schema changes require a new version tag (`vX.Y.Z`), a `CHANGELOG.md` entry, an updated
+`MIGRATION.md` for breaking changes, and a re-rendered vendor bundle consumed by every downstream
+project. Render from a clean checkout of the tagged full commit. Never edit a vendored copy in a
+consumer directly.
+
+The tag must exactly match `project.version`. The tag-triggered release-evidence workflow builds
+the distributions, generates checksums and an SPDX SBOM, and creates provenance and SBOM
+attestations. It deliberately does not publish; inspect that evidence before creating a release or
+uploading to a package index.

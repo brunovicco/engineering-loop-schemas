@@ -44,11 +44,19 @@ def test_overlapping_allow_and_deny_globs_are_rejected() -> None:
     assert any("scripts/loop_*" in error for error in errors)
 
 
+def test_overlapping_allowed_and_denied_actions_are_rejected() -> None:
+    contract = _valid_contract()
+    contract["actions"]["allowed"] = ["read", "push"]
+    contract["actions"]["denied"] = ["push"]
+    errors = validate(contract)
+    assert any("actions.allowed" in error and "push" in error for error in errors)
+
+
 def test_empty_glob_is_rejected() -> None:
     contract = _valid_contract()
     contract["scope"]["allowlist"] = [""]
     errors = validate(contract)
-    assert any("not a syntactically valid glob" in error for error in errors)
+    assert any("scope.allowlist[0]" in error for error in errors)
 
 
 @pytest.mark.parametrize(
@@ -60,6 +68,13 @@ def test_non_positive_budget_is_rejected(field: str) -> None:
     contract["budgets"][field] = 0
     errors = validate(contract)
     assert any(field in error for error in errors)
+
+
+def test_wrong_budget_type_is_reported_without_raising() -> None:
+    contract = _valid_contract()
+    contract["budgets"]["max_tokens"] = "1"
+    errors = validate(contract)
+    assert any("max_tokens" in error and "expected integer" in error for error in errors)
 
 
 def test_unsupported_hard_gate_is_rejected() -> None:
@@ -80,14 +95,14 @@ def test_schedule_trigger_without_schedule_is_rejected() -> None:
     contract = _valid_contract()
     contract["trigger"] = {"type": "schedule"}
     errors = validate(contract)
-    assert any("trigger.schedule" in error for error in errors)
+    assert any(".trigger" in error and "schedule" in error for error in errors)
 
 
 def test_event_trigger_without_event_is_rejected() -> None:
     contract = _valid_contract()
     contract["trigger"] = {"type": "event"}
     errors = validate(contract)
-    assert any("trigger.event" in error for error in errors)
+    assert any(".trigger" in error and "event" in error for error in errors)
 
 
 def test_validate_does_not_mutate_input() -> None:

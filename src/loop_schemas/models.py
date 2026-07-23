@@ -41,6 +41,12 @@ FinalState = Literal[
 ]
 Confidence = Literal["low", "medium", "high"]
 ExecutionTermination = Literal["EXITED", "TIMED_OUT", "CANCELLED", "OUTPUT_LIMIT"]
+ObjectIdAlgorithm = Literal["sha1", "sha256"]
+
+CONTRACT_DOCUMENT_VERSION = "1.0.0"
+EVIDENCE_DOCUMENT_VERSION = "2.0.0"
+VERDICT_DOCUMENT_VERSION = "2.0.0"
+BUILDER_RESULT_DOCUMENT_VERSION = "1.0.0"
 
 FINAL_STATES: tuple[FinalState, ...] = (
     "SUCCEEDED",
@@ -234,6 +240,11 @@ class Environment:
     """Reproducibility-binding environment description for an evidence run."""
 
     python: str
+    operating_system: str
+    architecture: str
+    executor_image: str
+    working_directory: str
+    sandbox_profile: str
     uv_lock_sha256: str
     tool_versions: dict[str, str] = field(default_factory=dict[str, str])
 
@@ -242,7 +253,7 @@ class Environment:
 class CommandResult:
     """One trusted gate command's typed, hashed, and timed result."""
 
-    command: str
+    argv: tuple[str, ...]
     termination: ExecutionTermination
     exit_code: int | None
     stdout_sha256: str
@@ -271,13 +282,18 @@ class Usage:
 
 @dataclass(frozen=True, slots=True)
 class Evidence:
-    """Mechanical record of what ran, against which commits, with hashed output."""
+    """Mechanical record of what ran, against which immutable inputs."""
 
     version: str
     run_id: str
     contract_id: str
-    baseline_sha: str
-    candidate_sha: str
+    repository: str
+    oid_algorithm: ObjectIdAlgorithm
+    baseline_oid: str
+    candidate_oid: str
+    candidate_tree_sha256: str
+    contract_sha256: str
+    policy_sha256: str
     environment: Environment
     commands: tuple[CommandResult, ...]
     changed_files: tuple[str, ...]
@@ -310,7 +326,9 @@ class Verdict:
     version: str
     run_id: str
     contract_id: str
-    candidate_sha: str
+    oid_algorithm: ObjectIdAlgorithm
+    candidate_oid: str
+    contract_sha256: str
     evidence_sha256: str
     status: VerdictStatus
     justification: Justification

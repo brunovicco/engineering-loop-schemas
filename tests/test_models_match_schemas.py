@@ -74,6 +74,7 @@ def validate_instance(schema_name: str, value: Any) -> None:
 def test_contract_model_matches_schema() -> None:
     """Check every contract dataclass and a representative round trip."""
     schema = load_schema("contract.schema.json")
+    assert schema["properties"]["version"]["const"] == models.CONTRACT_DOCUMENT_VERSION
     mappings = [
         (models.Contract, ()),
         (models.Trigger, ("trigger",)),
@@ -98,6 +99,7 @@ def test_contract_model_matches_schema() -> None:
 def test_evidence_model_matches_schema() -> None:
     """Check evidence dataclasses and a representative valid instance."""
     schema = load_schema("evidence.schema.json")
+    assert schema["properties"]["version"]["const"] == models.EVIDENCE_DOCUMENT_VERSION
     mappings = [
         (models.Evidence, ()),
         (models.Environment, ("environment",)),
@@ -114,19 +116,29 @@ def test_evidence_model_matches_schema() -> None:
     )
 
     value = models.Evidence(
-        version="1.0.0",
+        version=models.EVIDENCE_DOCUMENT_VERSION,
         run_id="run-001",
         contract_id="harness-self-improvement",
-        baseline_sha="a" * 40,
-        candidate_sha="b" * 40,
+        repository="github.com/brunovicco/example",
+        oid_algorithm="sha1",
+        baseline_oid="a" * 40,
+        candidate_oid="b" * 40,
+        candidate_tree_sha256="1" * 64,
+        contract_sha256="2" * 64,
+        policy_sha256="3" * 64,
         environment=models.Environment(
             python="3.12.11",
+            operating_system="linux",
+            architecture="x86_64",
+            executor_image="sha256:" + "9" * 64,
+            working_directory="/workspace",
+            sandbox_profile="linux-default-v1",
             uv_lock_sha256="c" * 64,
             tool_versions={"ruff": "0.15.21"},
         ),
         commands=(
             models.CommandResult(
-                command="uv run pytest",
+                argv=("uv", "run", "pytest"),
                 termination="EXITED",
                 exit_code=0,
                 stdout_sha256="d" * 64,
@@ -151,6 +163,7 @@ def test_evidence_model_matches_schema() -> None:
 def test_verdict_model_matches_schema() -> None:
     """Check verdict dataclasses, enums, and a representative valid instance."""
     schema = load_schema("verdict.schema.json")
+    assert schema["properties"]["version"]["const"] == models.VERDICT_DOCUMENT_VERSION
     mappings = [
         (models.Verdict, ()),
         (models.Justification, ("justification",)),
@@ -161,12 +174,17 @@ def test_verdict_model_matches_schema() -> None:
 
     assert set(get_args(models.VerdictStatus)) == set(schema["properties"]["status"]["enum"])
     assert set(get_args(models.FinalState)) == set(schema["properties"]["final_state"]["enum"])
+    assert set(get_args(models.ObjectIdAlgorithm)) == set(
+        schema["properties"]["oid_algorithm"]["enum"]
+    )
 
     value = models.Verdict(
-        version="1.0.0",
+        version=models.VERDICT_DOCUMENT_VERSION,
         run_id="run-001",
         contract_id="harness-self-improvement",
-        candidate_sha="b" * 40,
+        oid_algorithm="sha1",
+        candidate_oid="b" * 40,
+        contract_sha256="c" * 64,
         evidence_sha256="e" * 64,
         status="PASS",
         justification=models.Justification(
@@ -182,6 +200,7 @@ def test_verdict_model_matches_schema() -> None:
 def test_builder_result_model_matches_schema() -> None:
     """Check builder-result dataclasses and a representative valid instance."""
     schema = load_schema("builder-result.schema.json")
+    assert schema["properties"]["version"]["const"] == models.BUILDER_RESULT_DOCUMENT_VERSION
     mappings = [
         (models.BuilderResult, ()),
         (models.SelfReported, ("self_reported",)),
