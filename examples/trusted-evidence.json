@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "run_id": "01JZXY1E9W6YJ9S8W7P6Q5R4T3",
+  "contract_id": "harness-self-improvement",
+  "repository": "github.com/brunovicco/engineering-loop-schemas",
+  "oid_algorithm": "sha1",
+  "baseline_oid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "candidate_oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "candidate_tree_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "contract_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "policy_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "environment": {
+    "python": "3.13.14",
+    "operating_system": "linux",
+    "architecture": "x86_64",
+    "executor_image": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+    "working_directory": "/workspace",
+    "sandbox_profile": "linux-default-v1",
+    "uv_lock_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "tool_versions": {
+      "pytest": "9.1.1",
+      "ruff": "0.15.21"
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "scripts/quality_gate.py"
+      ],
+      "termination": "EXITED",
+      "exit_code": 0,
+      "stdout_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "stderr_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "specification_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "duration_s": 1.25
+    }
+  ],
+  "changed_files": [
+    "src/loop_schemas/models.py"
+  ],
+  "usage": {
+    "provider": "openai",
+    "model": "example-model",
+    "tokens": {
+      "input": 100,
+      "output": 50
+    },
+    "estimated_cost_usd": 0.01
+  },
+  "started_at": "2026-07-23T10:00:00Z",
+  "finished_at": "2026-07-23T10:00:02Z"
+}

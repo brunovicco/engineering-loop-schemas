@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "run_id": "01JZXY1E9W6YJ9S8W7P6Q5R4T3",
+  "contract_id": "harness-self-improvement",
+  "oid_algorithm": "sha1",
+  "candidate_oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "contract_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "evidence_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "status": "PASS",
+  "justification": {
+    "gate_results": [
+      {
+        "gate": "lock",
+        "passed": true,
+        "detail": "Lockfile matched the declared dependency graph"
+      },
+      {
+        "gate": "lint",
+        "passed": true
+      },
+      {
+        "gate": "format",
+        "passed": true
+      },
+      {
+        "gate": "typing",
+        "passed": true
+      },
+      {
+        "gate": "tests",
+        "passed": true
+      },
+      {
+        "gate": "security",
+        "passed": true
+      },
+      {
+        "gate": "dependencies",
+        "passed": true
+      },
+      {
+        "gate": "architecture",
+        "passed": true
+      },
+      {
+        "gate": "mcp",
+        "passed": true
+      },
+      {
+        "gate": "governance",
+        "passed": true
+      }
+    ],
+    "summary": "Every declared hard gate passed against trusted evidence."
+  },
+  "final_state": "SUCCEEDED",
+  "decided_at": "2026-07-23T10:00:03Z"
+}

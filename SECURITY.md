@@ -12,12 +12,13 @@ the bundle by version and full commit; upgrade to the fixed release and re-rende
 
 ## What is in scope
 
-- Validator flaws that accept a contract, evidence, or verdict document violating the schemas,
-  or that allow a builder-result to be treated as authoritative.
+- Validator flaws that accept any canonical document in violation of its schema, skip an
+  unsupported assertion, accept an incomplete verdict gate set, or allow a builder-result to be
+  treated as authoritative.
 - Schema changes or ambiguities that would let a hard gate pass by default or without a
   command-with-exit-code reduction.
-- Vendor-bundle rendering flaws that produce nondeterministic output or bypass the recorded
-  SHA-256 integrity hashes.
+- Vendor-bundle rendering flaws that produce nondeterministic output, misrepresent repository,
+  version, commit, or working-tree provenance, or bypass the recorded SHA-256 integrity hashes.
 - Path traversal, unsafe deserialization, or code execution in `validate_contract.py` or
   `render_vendor_bundle.py`.
 

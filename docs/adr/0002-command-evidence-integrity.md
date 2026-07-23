@@ -1,6 +1,6 @@
 # ADR 0002: Bind command evidence to typed termination, both output streams, and gate specification
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-21
 
 ## Context
@@ -17,17 +17,17 @@ before any consumer implements an evidence builder or persistence adapter.
 
 ## Decision
 
-\`CommandResult\` records:
+`CommandResult` records:
 
-- a closed \`termination\` value: \`EXITED\`, \`TIMED_OUT\`, \`CANCELLED\`, or
-  \`OUTPUT_LIMIT\`;
-- the real integer \`exit_code\` only when termination is \`EXITED\`;
-- a null \`exit_code\` for every forced termination;
+- a closed `termination` value: `EXITED`, `TIMED_OUT`, `CANCELLED`, or
+  `OUTPUT_LIMIT`;
+- the real integer `exit_code` only when termination is `EXITED`;
+- a null `exit_code` for every forced termination;
 - independent SHA-256 hashes for stdout and stderr;
 - the SHA-256 of the immutable trusted gate specification;
 - the command text and duration already present in the contract.
 
-The evidence document continues to bind \`candidate_sha\` and the environment at
+The evidence document continues to bind `candidate_sha` and the environment at
 the top level. Those fields, together with every command result, are included in
 the canonical evidence document later hashed by trusted code.
 
@@ -37,9 +37,13 @@ schema. No sentinel exit code is introduced.
 
 ## Consequences
 
-This is a breaking evidence-schema change. The next release must be \`v0.2.0\`.
-Consumers must not re-pin until that release exists and must migrate producers
-to populate every new required field.
+This was released in `v0.2.0` as a breaking evidence-schema change. Consumers
+must migrate producers to populate every required integrity field before
+re-pinning.
+
+ADR 0003 subsequently replaces the display command with shell-free `argv` and
+renames the trusted candidate identity to a complete `candidate_oid`. The
+termination and integrity decisions in this ADR remain in force.
 
 The contract can now represent the data needed for A08, but this decision does
 not demonstrate A08 by itself. Trusted canonical serialization, hashing,

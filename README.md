@@ -2,139 +2,226 @@
 
 *[Português](README.pt-BR.md)*
 
-Canonical, shared schemas with dependency-free JSON validation and optional
-PyYAML support for Evidence-Gated Engineering Loops -- the report-only self-improvement workflow shared by the
-[Codex](https://github.com/brunovicco/codex-python-engineering-harness) and
-[Claude Code](https://github.com/brunovicco/claude-python-engineering-harness)
-Python engineering harnesses.
+Canonical contracts for evidence-gated engineering loops: a provider-neutral
+boundary between what an AI coding agent reports, what a trusted executor
+actually observed, and what an independent evaluator may approve.
 
-This repository is the embryo of the future unified "alicerce" harness's
-loop layer: it is intentionally the *only* new repository created during the
-Sprint 0 / Phase 0-1 hardening pass, so that both sibling harnesses can
-depend on one source of truth for the loop contract instead of drifting
-copies. See `docs/LOOPS.md` in each harness for how it is consumed.
+The package ships four JSON Schema Draft 2020-12 documents, matching immutable
+Python models, a standard-library structural validator, and a deterministic
+vendor-bundle renderer. It does not run agents or promote code.
 
-## Non-negotiable principles (Phase 0-1 scope)
+## Why this exists
 
-- **A builder never certifies its own result.** A `builder-result` document
-  is the builder's own, non-authoritative account (see
-  `schemas/builder-result.schema.json`). Only a `verdict`, mechanically
-  derived from grading `evidence` against a `contract`'s
-  `acceptance.hard_gates`, can say PASS.
-- **A hard gate is default-FAIL and script-verifiable.** If a gate cannot be
-  reduced to a command with an exit code, it is not a hard gate.
-- **Evidence is bound to exact commits.** Every `evidence` document carries
-  `baseline_sha` and `candidate_sha`, plus a hashed environment
-  (`uv_lock_sha256`). Each command result records typed termination, hashes
-  of both output streams, and the immutable trusted gate specification hash,
-  so a verdict can always be traced back to exactly what ran against exactly
-  what code and policy.
-- **Hooks are defense in depth, not orchestration.** Nothing in this
-  repository, or in the Phase 0 integration described in each harness's
-  `docs/LOOPS.md`, runs a loop, promotes a candidate, or grants autonomy
-  above `report`.
-- **This is Phase 0-1: report-only.** No `loop_runner.py`, `loop_gate.py`,
-  `loop_state.py`, evaluator, or state machine exists yet, here or in either
-  harness. That is out of scope for this sprint by design.
+An agent saying “the tests passed” is not evidence. A reliable engineering loop
+needs separate identities and authority:
 
-## Layout
+| Artifact | Producer | Trusted for promotion? | Purpose |
+| --- | --- | ---: | --- |
+| `contract` | Human/platform policy | Yes | Defines scope, budgets, allowed actions, and hard gates |
+| `builder-result` | Coding agent | No | Records the builder's non-authoritative account |
+| `evidence` | Trusted executor | Yes | Binds exact code, policy, environment, command argv, termination, and output hashes |
+| `verdict` | Trusted evaluator | Yes | Grades evidence against the complete contract gate set |
 
+```mermaid
+flowchart TD
+    C["Contract<br/>policy and limits"] --> B["Builder"]
+    B --> BR["Builder result<br/>untrusted report"]
+    C --> E["Trusted executor"]
+    B --> E
+    E --> EV["Evidence<br/>immutable bindings"]
+    C --> V["Trusted evaluator"]
+    EV --> V
+    V --> VD["Verdict<br/>authoritative outcome"]
 ```
-schemas/
-  contract.schema.json        # what a loop run is allowed to do
-  evidence.schema.json        # what mechanically happened, hashed and SHA-bound
-  verdict.schema.json         # the single PASS/NEEDS_WORK/ESCALATE outcome
-  builder-result.schema.json  # a builder's own non-authoritative report
+
+The builder cannot produce `evidence` or a `verdict` that certifies its own
+candidate. Missing or unverifiable gates fail closed.
+
+## Security and integrity invariants
+
+- The canonical JSON Schema is the structural source of truth. The stdlib
+  evaluator loads those files and refuses to run if a schema introduces an
+  unsupported assertion keyword.
+- Document versions describe wire formats, not the Python package release.
+- Trusted evidence carries the repository identity, complete Git object IDs,
+  candidate-tree digest, contract digest, policy digest, executor environment,
+  and shell-free argv for every command.
+- `EXITED` requires a real integer exit code. `TIMED_OUT`, `CANCELLED`, and
+  `OUTPUT_LIMIT` require `null`.
+- stdout, stderr, and the immutable gate specification are hashed separately.
+- A `PASS` verdict can only use `SUCCEEDED` or `NO_OP` and cannot contain a
+  failed gate.
+- Cross-document validation requires exactly one result for every hard gate in
+  the contract; missing, duplicate, or undeclared gates are rejected.
+- Vendor provenance must match `pyproject.toml`, the exact Git `HEAD`, the
+  configured origin, and a clean working tree.
+
+## Document versions
+
+| Document | Wire version | Notes |
+| --- | ---: | --- |
+| `contract` | `1.0.0` | Existing report-only contract |
+| `builder-result` | `1.0.0` | Non-authoritative; now requires full SHA-1 IDs |
+| `evidence` | `2.0.0` | Repository/policy binding, full OIDs, executor context, structured argv |
+| `verdict` | `2.0.0` | Contract digest, full candidate OID, and status/final-state consistency |
+
+Each schema uses `const` for its version. Consumers can therefore select a
+compatible parser before trusting the document. See [MIGRATION.md](MIGRATION.md)
+for the breaking evidence and verdict changes.
+
+## Repository layout
+
+```text
+schemas/                         canonical language-neutral contracts
 src/loop_schemas/
-  models.py                   # stdlib-only dataclasses matching the schemas
-  validate_contract.py        # stdlib-only CLI + library contract validator
+  models.py                      frozen, slotted dataclasses
+  _stdlib_jsonschema.py          fail-closed supported-keyword evaluator
+  schema_resources.py            installed-schema resource API
+  validate_contract.py           CLI and document-validation API
+scripts/render_vendor_bundle.py  deterministic, provenance-checked vendoring
 examples/
-  harness-self-improvement.yaml  # a representative, schema-valid contract
+  harness-self-improvement.yaml
+  trusted-evidence.json
+  trusted-verdict.json
 tests/
 ```
 
-## The three-tier model and final states
+The wheel includes all four schemas under `loop_schemas/schemas/`; callers do
+not need a source checkout.
 
-Every loop run belongs to one of three levels of scrutiny:
+## Validate documents
 
-1. **Agent-level** -- a single builder attempt against one contract.
-2. **Completion-level** -- one full run: builder attempt(s), evidence
-   collection, and a verdict.
-3. **Operational-level** -- the loop's own health across many runs (budget
-   burn, escalation rate, drift between contract and reality).
-
-Every completed run resolves to exactly one final state, recorded on its
-`verdict.final_state`:
-
-| State | Meaning |
-| --- | --- |
-| `SUCCEEDED` | All hard gates passed; candidate is promotable pending human review. |
-| `NO_OP` | The builder correctly determined there was nothing to do. |
-| `NO_PROGRESS` | The builder produced a candidate, but it does not improve on baseline. |
-| `VERIFY_FAILED` | One or more hard gates failed against the candidate. |
-| `POLICY_BLOCKED` | The candidate touched `scope.denylist` or an `actions.denied` entry. |
-| `BUDGET_EXCEEDED` | `budgets` (tokens, cost, wall clock, or command count) was exceeded. |
-| `ESCALATED` | The run could not resolve PASS/FAIL and needs a human decision. |
-| `INFRA_FAILED` | The run failed for reasons unrelated to the candidate (tooling, network, environment). |
-
-`NO_PROGRESS` is specifically a trusted finding that a candidate does not
-improve on the baseline. Repeated equivalent diffs or failure signatures are
-internal stall signals, not final states by themselves. Their final
-classification follows the typed cause: for example, candidate verification,
-policy, budget, and infrastructure failures remain `VERIFY_FAILED`,
-`POLICY_BLOCKED`, `BUDGET_EXCEEDED`, and `INFRA_FAILED`, respectively. See
-[`ADR 0001`](docs/adr/0001-no-progress-and-stall-signals.md).
-
-## Validating a contract
+Validate the example contract:
 
 ```bash
-uv sync
-uv run python -m loop_schemas.validate_contract examples/harness-self-improvement.yaml
+uv sync --all-groups
+uv run python -m loop_schemas.validate_contract \
+  examples/harness-self-improvement.yaml
 ```
 
-`validate_contract.validate(data: dict) -> list[str]` is also usable as a
-library call; an empty list means the contract is valid. Beyond JSON-Schema
-structural validation, it additionally checks that `scope.allowlist` and
-`scope.denylist` do not literally overlap, that every glob is syntactically
-well-formed, that every budget is strictly positive, and that every
-`acceptance.hard_gates` entry is one of the contract-addressable named checks a harness's own
-`quality_gate.py` can actually run (`lock`, `lint`, `format`, `typing`,
-`tests`, `security`, `dependencies`, `architecture`, `mcp`, `governance`).
+Use the library APIs:
 
-## Vendoring into a harness
+```python
+from loop_schemas import load_schema
+from loop_schemas.validate_contract import (
+    validate,
+    validate_builder_result,
+    validate_evidence,
+    validate_verdict,
+)
 
-Because `template/scripts/quality_gate.py` in both harnesses must not gain a
-new third-party dependency, `src/loop_schemas/models.py` and
-`src/loop_schemas/validate_contract.py` are stdlib-only by design (YAML
-input degrades gracefully with a clear error if PyYAML is not installed;
-JSON input always works with no extra dependency).
+contract_errors = validate(contract)
+evidence_errors = validate_evidence(evidence)
+builder_errors = validate_builder_result(builder_result)
+verdict_errors = validate_verdict(verdict, contract=contract)
 
-The harnesses consume a deterministic bundle rendered by
-`scripts/render_vendor_bundle.py` from the published `v0.1.2` source. The renderer records the
-full source commit, version, repository, file sizes, SHA-256 hashes, and declared adaptations in
-`manifest.json`. The current consumers are pinned to
-`0459d61b7b1d4e7b46709e6d3895770553e6fab0`.
+evidence_schema = load_schema("evidence")
+```
 
-The bundle is not a byte-for-byte copy: the renderer changes the package import in
-`validate_contract.py` from `loop_schemas` to `_vendor_loop_schemas`. That single adaptation is
-declared in the manifest and is covered by determinism, integrity, and tampering tests. Do not edit
-a rendered bundle by hand. Fix the source repository, publish a new version and tag, then render a
-new bundle for each consumer.
+An empty list means valid. Structural failures include a JSON path. Contract
+validation additionally checks:
 
-`models.py` also needs the consuming project's own `pyproject.toml` to carry a matching
-`[tool.ruff.lint.per-file-ignores]` entry suppressing `UP037` for wherever the file lands
-(e.g. `"scripts/_vendor_loop_schemas/models.py" = ["UP037"]`). Do not add an inline
-`# noqa: UP037` instead -- it triggers a `RUF100` unused-directive error on Python
-3.12/3.13, where `UP037` never fires (see this repo's CHANGELOG `[Unreleased]` entry).
+- literal overlap between allowlist and denylist globs;
+- overlap between allowed and denied actions;
+- positive budgets;
+- supported hard-gate names;
+- trigger-specific requirements.
+
+`validate_verdict(..., contract=contract)` additionally verifies contract
+identity and exact gate-set completeness.
+
+JSON input and all structural validation are standard-library-only. YAML input
+is available when PyYAML is installed.
+
+## Evidence and verdict examples
+
+[trusted-evidence.json](examples/trusted-evidence.json) shows the full trusted
+execution envelope. It uses a shell-free `argv`, not a display command string,
+and binds all security-relevant inputs by complete identity or SHA-256.
+
+[trusted-verdict.json](examples/trusted-verdict.json) shows a matching
+authoritative result. `evidence_sha256` is defined over RFC 8785/JCS canonical
+JSON bytes; producers must not hash incidental pretty-printing.
+
+Every completed run resolves to one final state:
+
+| Status | Allowed final states |
+| --- | --- |
+| `PASS` | `SUCCEEDED`, `NO_OP` |
+| `NEEDS_WORK` | `NO_PROGRESS`, `VERIFY_FAILED`, `POLICY_BLOCKED`, `BUDGET_EXCEEDED` |
+| `ESCALATE` | `ESCALATED`, `INFRA_FAILED` |
+
+`NO_PROGRESS` means trusted evaluation found no improvement over the baseline.
+Repeated equivalent diffs or failure signatures are internal stall signals,
+not final states by themselves. See
+[ADR 0001](docs/adr/0001-no-progress-and-stall-signals.md).
+
+## Vendor into a harness
+
+The renderer produces a self-contained stdlib-only package containing the
+models, validator, resource loader, schemas, and a hashed manifest:
+
+```bash
+uv run python scripts/render_vendor_bundle.py \
+  --target build/vendor/_vendor_loop_schemas \
+  --source-commit "$(git rev-parse HEAD)"
+
+uv run python scripts/render_vendor_bundle.py \
+  --target build/vendor/_vendor_loop_schemas \
+  --source-commit "$(git rev-parse HEAD)" \
+  --check
+```
+
+Rendering fails if:
+
+- the declared version differs from `pyproject.toml`;
+- the declared commit differs from `HEAD`;
+- the origin differs from the declared repository;
+- tracked or untracked files make the source tree dirty.
+
+The complete bundle is staged before replacing the target. Its manifest hashes
+every Python file and schema, records all import adaptations, and rejects
+missing, unexpected, modified, or symlinked files during `--check`.
+
+Do not edit a rendered copy. Change this repository, publish a release, and
+re-render each consumer from the tagged full commit.
+
+## Release supply chain
+
+A semantic-version tag triggers `.github/workflows/release-evidence.yml`. The
+workflow re-runs the quality gate, checks that the tag equals the package
+version, builds the wheel and source distribution, emits SHA-256 checksums,
+generates an SPDX JSON SBOM, and creates GitHub-signed provenance and SBOM
+attestations. Actions are pinned to full commits.
+
+The workflow preserves these files as release evidence but does not publish to
+PyPI or create a GitHub release. Promotion remains an explicit maintainer
+action. After a tagged run, verify a downloaded distribution with:
+
+```bash
+gh attestation verify dist/loop_schemas-*.whl \
+  -R brunovicco/engineering-loop-schemas
+```
 
 ## Development
 
 ```bash
-uv sync
-uv run pytest
+uv lock --check
+uv sync --frozen --all-groups
 uv run ruff check .
 uv run ruff format --check .
 uv run pyright
+uv run pytest
+uv build
 ```
 
-Coverage is enforced at >=80% (`--cov-fail-under=80` in `pyproject.toml`).
+CI covers Python 3.12, 3.13, and 3.14. Tests include adversarial differential
+checks against `jsonschema`, model/schema parity, wheel contents, verdict
+consistency, vendor tampering, and source-provenance enforcement. Coverage
+includes the renderer and is enforced at 90%.
+
+## Scope
+
+This project remains report-only. It defines and validates artifacts; it does
+not execute an engineering loop, modify product code, create or promote
+candidates, merge branches, deploy artifacts, or let a builder certify itself.

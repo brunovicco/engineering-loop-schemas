@@ -15,19 +15,29 @@ ROOT = Path(__file__).resolve().parents[1]
 def evidence_document() -> dict[str, Any]:
     """Return a minimal valid evidence document."""
     return {
-        "version": "1.0.0",
+        "version": "2.0.0",
         "run_id": "run-001",
         "contract_id": "harness-self-improvement",
-        "baseline_sha": "a" * 40,
-        "candidate_sha": "b" * 40,
+        "repository": "github.com/brunovicco/example",
+        "oid_algorithm": "sha1",
+        "baseline_oid": "a" * 40,
+        "candidate_oid": "b" * 40,
+        "candidate_tree_sha256": "1" * 64,
+        "contract_sha256": "2" * 64,
+        "policy_sha256": "3" * 64,
         "environment": {
             "python": "3.12.11",
+            "operating_system": "linux",
+            "architecture": "x86_64",
+            "executor_image": "sha256:" + "9" * 64,
+            "working_directory": "/workspace",
+            "sandbox_profile": "linux-default-v1",
             "uv_lock_sha256": "c" * 64,
             "tool_versions": {"pytest": "9.0.2"},
         },
         "commands": [
             {
-                "command": "uv run pytest",
+                "argv": ["uv", "run", "pytest"],
                 "termination": "EXITED",
                 "exit_code": 0,
                 "stdout_sha256": "d" * 64,
@@ -104,6 +114,30 @@ def test_every_integrity_hash_must_be_canonical_sha256(
     """Hashes are exactly 64 lowercase hexadecimal characters."""
     document = copy.deepcopy(evidence_document())
     document["commands"][0][field] = "A" * 64
+
+    with pytest.raises(ValidationError):
+        validator.validate(document)
+
+
+@pytest.mark.parametrize("field", ["baseline_oid", "candidate_oid"])
+def test_git_object_ids_must_be_complete(
+    validator: Draft202012Validator,
+    field: str,
+) -> None:
+    """Abbreviated Git object IDs are ambiguous and therefore rejected."""
+    document = evidence_document()
+    document[field] = "a" * 12
+
+    with pytest.raises(ValidationError):
+        validator.validate(document)
+
+
+def test_command_is_a_shell_free_argument_vector(
+    validator: Draft202012Validator,
+) -> None:
+    """A display string cannot substitute for the executed argv."""
+    document = evidence_document()
+    document["commands"][0]["argv"] = "uv run pytest"
 
     with pytest.raises(ValidationError):
         validator.validate(document)

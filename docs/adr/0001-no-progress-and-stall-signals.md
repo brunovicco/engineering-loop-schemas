@@ -7,7 +7,7 @@ Date: 2026-07-18
 
 The canonical `NO_PROGRESS` final state in v0.1.2 means that a builder
 produced a candidate that does not improve on the baseline. Earlier design
-material also used â€œno progressâ€ informally for repeated equivalent diffs or
+material also used “no progress” informally for repeated equivalent diffs or
 failure signatures across attempts.
 
 Those concepts are related but not equivalent. A repeated result can be caused
@@ -39,7 +39,7 @@ A builder cannot declare either stall or `NO_PROGRESS` authoritatively.
 
 ## Consequences
 
-- The v0.1.2 schema, enum, models, and consumer bundles do not change.
+- The verdict vocabulary and the meaning of `NO_PROGRESS` do not change.
 - Stall detection may evolve inside an evaluator without creating schema drift.
 - Equivalent repetition does not erase the typed cause of failure.
 - Alicerce may persist stall signals internally but must serialize only the
