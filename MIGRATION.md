@@ -1,10 +1,10 @@
 # Migration guide
 
-## `v0.2.x` to the next breaking release
+## `v0.2.x` to `v0.3.0`
 
-The next release is expected to be `v0.3.0`. Package release versions and
-document wire-format versions are independent: consumers select a document
-parser from the document's `version` field.
+`v0.3.0` is a breaking release. Package release versions and document
+wire-format versions are independent: consumers select a document parser
+from the document's `version` field.
 
 ### Evidence `1.0.0` to `2.0.0`
 

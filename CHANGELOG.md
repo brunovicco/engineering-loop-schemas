@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-23
+
 ### Added
 
 - Public installed-schema API (`load_schema()` and `schema_text()`), with all four canonical JSON
@@ -37,14 +39,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
-- `validate()` now enforces the canonical contract JSON Schema instead of relying on dataclass
-  construction, closing acceptance gaps for unknown properties, invalid enums, wrong types,
-  empty/duplicate collections, and unsupported document versions.
 - Unexpected types return structural errors instead of leaking `TypeError`.
 - Schema `$id` values now resolve to the raw canonical files on the default branch.
 - Corrected mojibake in ADR 0001, Markdown escapes in ADR 0002, and marked the released command
   evidence decision as accepted.
 - Updated validation and vendoring documentation that still referred to `v0.1.2`.
+
+### Security
+
+- `validate()` now enforces the canonical contract JSON Schema instead of relying on dataclass
+  construction, closing acceptance gaps for unknown properties, invalid enums, wrong types,
+  empty or duplicate collections, and unsupported document versions.
+- Evidence and verdict documents now bind repository, contract, policy, candidate, and executor
+  identities, reducing the risk of document substitution or self-certified gate results.
+- Vendor rendering now rejects mismatched package versions, source commits, repository origins,
+  and dirty working trees before generating a provenance manifest.
 
 ## [0.2.0] - 2026-07-21
 
@@ -139,7 +148,8 @@ the Codex/Claude Code Python engineering harness consolidation (Sprint 0, Phase 
   cross-validation against both the JSON Schema and `validate_contract.validate()`, and CLI
   behavior. Coverage enforced at >=80%.
 
-[Unreleased]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/brunovicco/engineering-loop-schemas/compare/v0.1.1...v0.1.2
